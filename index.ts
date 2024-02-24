@@ -17,16 +17,47 @@ async function main(): Promise<void> {
     // Inicializar la conexión
     const apiRequestManager = new APIRequestManager(ACCESS_TOKEN);
 
-    // Extraemos información de mi usuario
+    // Creamos nuestro usuario
     let me: Usuario = await Usuario.getMyUser(apiRequestManager);
 
-    // Extraemos un array con todos los chats asociados a mi usuario
+    // Creamos un array con todos los chats asociados a nuestro usuario
     const meChats: Chat[] = await Chat.fromAPIRequestManager(
         apiRequestManager,
         'https://graph.microsoft.com/v1.0/me/chats/',
     );
 
-    console.log(meChats[7]);
+    // Reordenamos los chats usando el campo 'chatType'
+    const groupedChats = Chat.groupChatsByType(meChats);
+
+    // Completamos el campo 'topic' de los grupos 'oneOnOne'
+    for (const chat of groupedChats.oneOnOne) {
+        const userIds = chat.getIdUserOneOnOne();
+        if (userIds !== undefined) {
+            if (userIds[0] !== me.id) {
+                chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[0])).getUserName();
+            } else {
+                chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[1])).getUserName();
+            }
+        }
+    }
+
+    // Completamos el campo 'topic' de los grupos 'group'
+    for (const chat of groupedChats.group) {
+        const mails = await chat.getChatMembers(apiRequestManager);
+        if (mails) {
+            let aux_users: string[] = [];
+            for (const mail of mails) {
+                if (mail !== me.mail) {
+                    aux_users.push((await Usuario.getUserByEmail(apiRequestManager, mail)).getUserName());
+                }
+            }
+            aux_users.push(me.getUserName());
+
+            chat.topic = aux_users.join('; ');
+        }
+    }
+
+    console.log(groupedChats);
 
     /*
     let i = 0;
