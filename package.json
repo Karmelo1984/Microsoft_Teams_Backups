@@ -7,16 +7,27 @@
     "author": "Carmelo <79457759+Karmelo1984@users.noreply.github.com>",
     "license": "MIT",
     "private": false,
-    "dependencies": {
-        "@types/axios": "0.14.0",
-        "@types/node": "20.11.20",
-        "axios": "1.6.7",
-        "dotenv": "16.4.5",
-        "typescript": "5.3.3"
+    "config": {
+        "commitizen": {
+            "path": "./node_modules/cz-conventional-changelog"
+        }
+    },
+    "nodemonConfig": {
+        "ignore": [
+            "./salida/"
+        ]
     },
     "scripts": {
         "start": "nodemon index.ts",
         "release": "standard-version"
+    },
+    "dependencies": {
+        "@types/axios": "0.14.0",
+        "@types/node": "20.11.20",
+        "axios": "1.6.7",
+        "crc-32": "^1.2.2",
+        "dotenv": "16.4.5",
+        "typescript": "5.3.3"
     },
     "devDependencies": {
         "@commitlint/cli": "^18.6.1",
@@ -31,10 +42,5 @@
         "husky": "^9.0.11",
         "prettier": "^3.2.5",
         "standard-version": "^9.5.0"
-    },
-    "config": {
-        "commitizen": {
-            "path": "./node_modules/cz-conventional-changelog"
-        }
     }
 }

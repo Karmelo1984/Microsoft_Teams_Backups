@@ -1,12 +1,11 @@
 import * as readline from 'readline';
+import path from 'path';
 
 require('dotenv').config(); // Carga las variables de entorno desde .env
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN || '';
+const PATH_SALIDA = path.resolve(__dirname, process.env.PATH_GENERAL || './salida');
 
-import Usuario from './src/usuario/usuario';
-import APIRequestManager from './src/APIRequestManager';
-import Chat from './src/chat/chat';
-import Mensaje from './src/mensaje/mensaje';
+import processChats from './src/extractChat';
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -14,64 +13,13 @@ const rl = readline.createInterface({
 });
 
 async function main(): Promise<void> {
-    // Inicializar la conexión
-    const apiRequestManager = new APIRequestManager(ACCESS_TOKEN);
-
-    // Creamos nuestro usuario
-    let me: Usuario = await Usuario.getMyUser(apiRequestManager);
-
-    // Creamos un array con todos los chats asociados a nuestro usuario
-    const meChats: Chat[] = await Chat.fromAPIRequestManager(
-        apiRequestManager,
-        'https://graph.microsoft.com/v1.0/me/chats/',
-    );
-
-    // Reordenamos los chats usando el campo 'chatType'
-    const groupedChats = Chat.groupChatsByType(meChats);
-
-    // Completamos el campo 'topic' de los grupos 'oneOnOne'
-    for (const chat of groupedChats.oneOnOne) {
-        const userIds = chat.getIdUserOneOnOne();
-        if (userIds !== undefined) {
-            if (userIds[0] !== me.id) {
-                chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[0])).getUserName();
-            } else {
-                chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[1])).getUserName();
-            }
-        }
+    // Si no se encuentra el TOKEN no continuamos
+    if (ACCESS_TOKEN === '') {
+        console.error('El token de acceso está vacío. Deteniendo la ejecución.');
+        process.exit(1); // Detener la ejecución del programa con un código de salida no cero para indicar un error
     }
 
-    // Completamos el campo 'topic' de los grupos 'group'
-    for (const chat of groupedChats.group) {
-        const mails = await chat.getChatMembers(apiRequestManager);
-        if (mails) {
-            let aux_users: string[] = [];
-            for (const mail of mails) {
-                if (mail !== me.mail) {
-                    aux_users.push((await Usuario.getUserByEmail(apiRequestManager, mail)).getUserName());
-                }
-            }
-            aux_users.push(me.getUserName());
-
-            chat.topic = aux_users.join('; ');
-        }
-    }
-
-    console.log(groupedChats);
-
-    /*
-    let i = 0;
-    while (i < meChats.length) {
-        const chat = meChats[i];
-        console.log(++i);
-
-        const mensajes: Mensaje[] = await Mensaje.fromAPIRequestManager(
-            apiRequestManager,
-            `https://graph.microsoft.com/v1.0/me/chats/${chat.id}/messages`,
-        );
-        console.log(mensajes);
-    }
-    */
+    processChats(ACCESS_TOKEN, PATH_SALIDA);
 }
 
 main()

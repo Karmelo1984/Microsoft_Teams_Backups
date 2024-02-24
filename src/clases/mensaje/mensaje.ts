@@ -37,23 +37,30 @@ export default class Mensaje {
             if (!Mensaje.isMessageData(jsonData)) {
                 throw new Error('El objeto JSON no cumple con la estructura de mensaje esperada.');
             }
+
+            // Se agregan todos los mensajes que no sean del sistema
             mensajes.push(
-                ...jsonData.value.map((msgData: any) => {
-                    const imageUrls = msgData.body.content.match(UPLOADED_IMAGE_MATCH);
-                    const imageUrlsArray = imageUrls ? imageUrls.filter((url: any) => typeof url === 'string') : [];
-                    return new Mensaje({
-                        id_msg: msgData.id,
-                        createdDateTime: msgData.createdDateTime,
-                        id_user: msgData.from.user.id,
-                        displayName: msgData.from.user.displayName,
-                        contentType: msgData.body.contentType,
-                        content: msgData.body.content,
-                        image: imageUrlsArray,
-                        attachments: msgData.attachments,
-                        mentions: msgData.mentions,
-                        reactions: msgData.reactions,
-                    });
-                }),
+                ...jsonData.value
+                    .filter((msgData: any) => msgData.body.content !== '<systemEventMessage/>')
+                    .map((msgData: any) => {
+                        const imageUrls = msgData.body.content.match(UPLOADED_IMAGE_MATCH);
+                        const imageUrlsArray = imageUrls ? imageUrls.filter((url: any) => typeof url === 'string') : [];
+                        const userId = msgData.from && msgData.from.user ? msgData.from.user.id : null;
+                        const displayName = msgData.from && msgData.from.user ? msgData.from.user.displayName : null;
+
+                        return new Mensaje({
+                            id_msg: msgData.id,
+                            createdDateTime: msgData.createdDateTime,
+                            id_user: userId,
+                            displayName: displayName,
+                            contentType: msgData.body.contentType,
+                            content: msgData.body.content,
+                            image: imageUrlsArray,
+                            attachments: msgData.attachments,
+                            mentions: msgData.mentions,
+                            reactions: msgData.reactions,
+                        });
+                    }),
             );
             nextPageUrl = jsonData['@odata.nextLink'];
         }

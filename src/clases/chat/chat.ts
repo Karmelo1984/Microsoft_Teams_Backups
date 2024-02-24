@@ -1,4 +1,5 @@
 import APIRequestManager from '../APIRequestManager';
+import MensajeData from '../mensaje/mensaje.interface';
 import ChatData from './chat.interface';
 
 export default class Chat {
@@ -7,6 +8,7 @@ export default class Chat {
     createdDateTime: Date;
     lastUpdatedDateTime: Date;
     chatType: string;
+    messages: MensajeData[] | null;
 
     constructor(data: ChatData) {
         this.id = data.id;
@@ -14,6 +16,7 @@ export default class Chat {
         this.createdDateTime = new Date(data.createdDateTime);
         this.lastUpdatedDateTime = new Date(data.lastUpdatedDateTime);
         this.chatType = data.chatType;
+        this.messages = data.messages;
     }
 
     static async fromAPIRequestManager(apiRequestManager: APIRequestManager, url: string): Promise<Chat[]> {
