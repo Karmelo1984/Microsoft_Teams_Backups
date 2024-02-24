@@ -24,9 +24,9 @@ export default class Usuario {
         mobilePhone = null,
         preferredLanguage = null,
     }: UsuarioData) {
-        if (!displayName || !givenName || !mail || !officeLocation || !surname || !userPrincipalName || !id) {
+        if (!displayName || !givenName || !mail || !surname || !userPrincipalName || !id) {
             throw new Error(
-                'Los parámetros displayName, givenName, mail, officeLocation, surname, userPrincipalName e id son obligatorios y no pueden ser nulos.',
+                'Los parámetros displayName, givenName, mail, surname, userPrincipalName e id son obligatorios y no pueden ser nulos.',
             );
         }
         this.id = id;
@@ -53,7 +53,6 @@ export default class Usuario {
 
     static async getUserById(apiRequestManager: APIRequestManager, id: string): Promise<any> {
         let url: string = `https://graph.microsoft.com/v1.0/users/${id}/identities`;
-        console.log(url);
 
         const jsonData: any = await apiRequestManager.fetchResponse(url);
         if (!Usuario.isUserById(jsonData)) {
@@ -62,6 +61,10 @@ export default class Usuario {
 
         const email = jsonData.value[0].issuerAssignedId;
         return Usuario.getUserByEmail(apiRequestManager, email);
+    }
+
+    getUserName(): string {
+        return `${this.givenName} ${this.surname}`;
     }
 
     private static async fromAPIRequestManager(apiRequestManager: APIRequestManager, url: string): Promise<Usuario> {
@@ -101,15 +104,7 @@ export default class Usuario {
             return false;
         }
 
-        const requiredProperties = [
-            'displayName',
-            'givenName',
-            'mail',
-            'officeLocation',
-            'surname',
-            'userPrincipalName',
-            'id',
-        ];
+        const requiredProperties = ['displayName', 'givenName', 'mail', 'surname', 'userPrincipalName', 'id'];
         for (const prop of requiredProperties) {
             if (typeof obj[prop] !== 'string') {
                 return false;
@@ -125,6 +120,10 @@ export default class Usuario {
         }
 
         if (obj.mobilePhone && typeof obj.mobilePhone !== 'string' && obj.mobilePhone !== null) {
+            return false;
+        }
+
+        if (obj.officeLocation && typeof obj.officeLocation !== 'string' && obj.officeLocation !== null) {
             return false;
         }
 
