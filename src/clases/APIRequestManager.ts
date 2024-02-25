@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import path from 'path';
+import fs from 'fs';
 
 export default class APIRequestManager {
     private readonly instance: AxiosInstance;
@@ -24,5 +26,19 @@ export default class APIRequestManager {
         }
 
         return response;
+    }
+
+    async fetchResponseImage(apiUrl: string, path_image: string): Promise<void> {
+        let response: any = undefined;
+        const res: AxiosResponse<any> = await this.instance({
+            method: 'get',
+            url: apiUrl,
+            responseType: 'stream',
+        });
+
+        if (res.data) {
+            response = res.data;
+        }
+        await res.data.pipe(fs.createWriteStream(path_image));
     }
 }

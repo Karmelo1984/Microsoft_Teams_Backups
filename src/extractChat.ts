@@ -1,19 +1,19 @@
 import * as path from 'path';
 import crc32 from 'crc-32';
+import { AxiosError } from 'axios';
 
 import APIRequestManager from './clases/APIRequestManager';
 import JSONFileManager from './clases/JSONFileManager';
 import Usuario from './clases/usuario/usuario';
 import Chat from './clases/chat/chat';
 import Mensaje from './clases/mensaje/mensaje';
-import resumeChats from './interfaces/resumeChats.interfaces';
-import { AxiosError } from 'axios';
+import ResumeChats from './interfaces/resumeChats.interfaces';
 
 export default async function extractChat(
     apiRequestManager: APIRequestManager,
     me: Usuario,
     path_json: string,
-): Promise<resumeChats> {
+): Promise<ResumeChats> {
     // Creamos un array con todos los chats asociados a nuestro usuario
     const meChats: Chat[] = await Chat.fromAPIRequestManager(
         apiRequestManager,
@@ -52,7 +52,8 @@ export default async function extractChat(
     }
 
     // Iteramos sobre cada Chat para, asignarle los mensajes y para no tener que hacer otro bucle, aprovechamos y lo vamos guardando como JSON
-    const chatData: resumeChats = {};
+    const chatData: ResumeChats = {};
+
     for (const key in groupedChats) {
         if (Object.hasOwnProperty.call(groupedChats, key)) {
             const chatsArray = groupedChats[key];

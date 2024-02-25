@@ -1,0 +1,71 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f3f2f8;
+    margin: 0;
+    padding: 0;
+}
+
+.header-info {
+    /* Estilos para la clase header-info */
+}
+
+.message-info {
+    border-radius: 10px;
+    margin: 20px 20px 20px 20px; /* Márgenes superior, derecho, inferior e izquierdo respectivamente */
+
+    padding: 12px;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Agrega sombra a los mensajes */
+}
+
+.message-left {
+    margin-right: 40%;
+    background-color: rgba(166, 166, 166, 0.2); /* Color grisáceo con 30% de transparencia */
+}
+
+.message-right {
+    margin-left: 40%;
+    background-color: rgba(0, 120, 212, 0.2); /* Color azul con 30% de transparencia */
+    /*color: #fff; /* Color de texto blanco para mensajes derechos */
+}
+
+.message-time {
+    font-size: 15px; /* Tamaño de fuente más pequeño */
+    margin: 20px 20px 20px 20px; /* Márgenes superior, derecho, inferior e izquierdo respectivamente */
+    color: #000000; /* Color de texto negro para la hora */
+    line-height: 0; /* Ajusta el interlineado aumentando este valor */
+}
+
+.message-sender {
+    margin: 0px 20px 20px 20px; /* Márgenes superior, derecho, inferior e izquierdo respectivamente */
+    font-weight: bold;
+    line-height: 2; /* Ajusta el interlineado aumentando este valor */
+}
+
+.message-content {
+    border-radius: 8px;
+    margin: 10px;
+    padding: 12px;
+    font-size: 14px;
+    margin-top: 8px; /* Añade un espacio superior */
+}
+
+/* Estilo de los enlaces */
+.message-content a {
+    color: #0078d4;
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+.message-left .message-content img,
+.message-right .message-content img {
+    max-width: 1000px; /* Ancho máximo deseado */
+    height: auto; /* Altura ajustada automáticamente para mantener la relación de aspecto */
+}
+
+.footer {
+    /* Estilos para la clase footer */
+}

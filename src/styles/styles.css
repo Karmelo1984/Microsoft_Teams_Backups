@@ -1,0 +1,83 @@
+/* Estilos para el header */
+.header {
+    position: fixed;
+    width: 100%;
+    background-color: #000f99b0; /* Cambiar a un color de fondo más intenso */
+    color: rgb(255, 255, 255); /* Cambiar el color del texto a blanco */
+    padding: 10px; /* Aumentar el espacio alrededor del texto para hacer la cabecera más grande */
+    text-align: center; /* Centrar el texto */
+    position: relative; /* Hacer que la posición de la imagen sea relativa al header */
+}
+
+/* Estilos para la imagen en el header */
+.header img {
+    position: absolute; /* Hacer que la imagen se posicione de forma absoluta */
+    top: 50%; /* Posicionar la imagen en el centro vertical del header */
+    left: 200px; /* Posicionar la imagen a la izquierda del header */
+    transform: translateY(-50%); /* Centrar verticalmente la imagen */
+    border-radius: 50%; /* Aplicar un filtro redondeado a la imagen */
+    width: 75px; /* Ajustar el ancho de la imagen */
+    height: 75px; /* Ajustar la altura de la imagen */
+}
+
+.header h1 {
+    color: #d4d4d4;
+}
+
+/* Estilos para el cuerpo */
+.body {
+    font-family: Arial, sans-serif; /* Utilizar una fuente legible */
+    margin: 0; /* Eliminar el margen predeterminado del body */
+    padding: 20px; /* Añadir un poco de espacio alrededor del cuerpo */
+}
+
+/* Estilos para las secciones */
+section {
+    margin-bottom: 20px; /* Añadir espacio entre secciones */
+}
+
+/* Estilos para los títulos de sección */
+section h2 {
+    color: #333; /* Cambiar el color del título */
+}
+
+/* Estilos para las listas dentro de las secciones */
+section ul {
+    list-style-type: none; /* Eliminar los marcadores de lista */
+    padding-left: 20; /* Eliminar el padding izquierdo de la lista */
+}
+
+/* Estilos para los elementos de lista dentro de las secciones */
+section li {
+    margin-bottom: 5px; /* Añadir espacio entre elementos de lista */
+}
+
+/* Estilos para el footer */
+.footer {
+    bottom: 0;
+    width: 100%;
+    background-color: #bbe6ff;
+    padding: 10px;
+    text-align: center;
+}
+
+/* Estilos para el título del footer */
+.footer h2:first-child {
+    margin-bottom: 5px;
+}
+
+/* Estilos para el enlace en el footer */
+.footer a {
+    color: #0078d4;
+    text-decoration: none;
+}
+
+/* Estilos para el enlace en el footer al pasar el cursor sobre él */
+.footer a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos para el segundo título del footer */
+.footer h2:last-child {
+    font-size: 14px;
+}

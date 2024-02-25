@@ -1,9 +1,9 @@
 # microsoft-teams-backups
 
-Aplicación escrita en Typescript para poder generar backups de los chats de una cuenta de Microsoft Teams.
+Aplicación escrita en Typescript para poder generar backups de los chats de una cuenta de empresa de Microsoft Teams.
 
-Es necesario tener el Token Access para poder usar la API que Microsoft pone a disposición, a través del
-[enlace](https://developer.microsoft.com/en-us/graph/graph-explorer)
+Es necesario tener el Token Access para poder usar la API que Microsoft pone a disposición, a través de este
+[enlace](https://developer.microsoft.com/en-us/graph/graph-explorer).
 
 ## Ayuda al desarrollo
 
@@ -49,7 +49,7 @@ siguientes herramientas:
 
 3. Después haremos **push** al repositorio, bien a través de **CLI**, **github desktop** o **gitkraken**.
 
-### [¿Cómo lanzar una versión nueva?](https://medium.com/nosolosoftware/estandariza-tus-commits-y-automatiza-tu-changelog-con-estas-herramientas-bb83c404f02f)
+### [¿Cómo generar una nueva versión?](https://medium.com/nosolosoftware/estandariza-tus-commits-y-automatiza-tu-changelog-con-estas-herramientas-bb83c404f02f)
 
 -   **_PRIMERA VERSIÓN:_** NO aumenta versión.
 
@@ -78,9 +78,28 @@ Aunque esto es posible configurarlo a gusto en la propia herramienta.
 
 ## ¿Cómo conseguir el ACCESS_TOKEN?
 
-## ¿Cómo conseguir el ACCESS_TOKEN?
+Hay dos maneras de conseguir el `ACCESS_TOKEN`. En ambos casos debes tener la sesión iniciada a tu cuenta.
 
-## ¿Cómo conseguir el ACCESS_TOKEN?
+### Desde 'Teams versión de navegador'
+
+1. Inicia la sesión a Teams desde el navegador (yo lo he hecho desde Chrome), y abre la herramienta para desarrolladores
+   (suele ser `F12`o `Ctrl + Shift + i`).
+
+2. Nos vamos al apartado `Application` y en el panel de la izquierda, nos vamos a `Storage/Cookies`.
+
+3. Hay que buscar la variable `authtoken`que tendrá el siguiente aspecto:
+
+    ```
+        Bearer%3D<.......................>%26Origin%3Dhttps%3A%2F%2Fteams.microsoft.com
+    ```
+
+4. Hay que elegir el fragmento de código que yo tengo marcado como `<.......................>`
+
+### Desde 'Graph Explorer'
+
+1. Inicia sesión con tu cuenta.
+
+2. En la parte central habrá un apartado que pone `Access token`.
 
 ## ¿Cómo hacer ejecutar el programa?
 
