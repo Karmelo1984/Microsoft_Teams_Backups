@@ -6,19 +6,14 @@ import JSONFileManager from './clases/JSONFileManager';
 import Usuario from './clases/usuario/usuario';
 import Chat from './clases/chat/chat';
 import Mensaje from './clases/mensaje/mensaje';
+import resumeChats from './interfaces/resumeChats.interfaces';
+import { AxiosError } from 'axios';
 
-export default async function processChats(accessToken: string, path_json: string): Promise<void> {
-    if (accessToken === '') {
-        console.error('El token de acceso está vacío. Deteniendo la ejecución.');
-        process.exit(1); // Detener la ejecución del programa con un código de salida no cero para indicar un error
-    }
-
-    // Inicializar la conexión
-    const apiRequestManager = new APIRequestManager(accessToken);
-
-    // Creamos nuestro usuario
-    let me: Usuario = await Usuario.getMyUser(apiRequestManager);
-
+export default async function extractChat(
+    apiRequestManager: APIRequestManager,
+    me: Usuario,
+    path_json: string,
+): Promise<resumeChats> {
     // Creamos un array con todos los chats asociados a nuestro usuario
     const meChats: Chat[] = await Chat.fromAPIRequestManager(
         apiRequestManager,
@@ -57,28 +52,45 @@ export default async function processChats(accessToken: string, path_json: strin
     }
 
     // Iteramos sobre cada Chat para, asignarle los mensajes y para no tener que hacer otro bucle, aprovechamos y lo vamos guardando como JSON
+    const chatData: resumeChats = {};
     for (const key in groupedChats) {
         if (Object.hasOwnProperty.call(groupedChats, key)) {
             const chatsArray = groupedChats[key];
 
+            const chatTopics: Array<[string, string | null]> = [];
+            //const chatTopics: string[] = [];
+
             for (const chat of chatsArray) {
-                const name = calculateCRC(chat.topic ?? generarStringAleatorio(50));
+                try {
+                    const name = calculateCRC(chat.topic ?? generarStringAleatorio(50));
+                    // Asignarle a cada Chat, su historial de mensajes correspondientes
+                    const mensajes: Mensaje[] = await Mensaje.fromAPIRequestManager(
+                        apiRequestManager,
+                        `https://graph.microsoft.com/v1.0/me/chats/${chat.id}/messages`,
+                    );
+                    chat.messages = mensajes;
 
-                // Asignarle a cada Chat, su historial de mensajes correspondientes
-                const mensajes: Mensaje[] = await Mensaje.fromAPIRequestManager(
-                    apiRequestManager,
-                    `https://graph.microsoft.com/v1.0/me/chats/${chat.id}/messages`,
-                );
-                chat.messages = mensajes;
+                    // Guardar cada chat como un fichero JSON
+                    const pathAbsolutoJson = path.resolve(path_json, 'chats', `${name}.json`);
+                    const jsonFileManager = new JSONFileManager(pathAbsolutoJson);
 
-                // Guardar cada chat como un fichero JSON
-                const pathAbsolutoJson = path.resolve(path_json, 'chats', `${name}.json`);
-                const jsonFileManager = new JSONFileManager(pathAbsolutoJson);
+                    jsonFileManager.writeJSON(chat);
 
-                jsonFileManager.writeJSON(chat);
+                    // Agregar el tópico y la ruta al arreglo chatTopics
+                    chatTopics.push([name, chat.topic]);
+                } catch (error) {
+                    // Manejar el error aquí, por ejemplo, registrándolo en la consola
+                    console.error(`Error al procesar el chat <${chat.topic}>:`, (error as AxiosError).response);
+                    // Continuar con la siguiente iteración del bucle
+                    continue;
+                }
             }
+
+            // Asignar el arreglo chatTopics a la clave correspondiente en chatData
+            chatData[key] = chatTopics;
         }
     }
+    return chatData;
 }
 
 function calculateCRC(text: string): string {
