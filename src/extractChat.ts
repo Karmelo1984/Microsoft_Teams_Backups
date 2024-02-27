@@ -14,18 +14,19 @@ export default async function extractChat(
     me: Usuario,
     path_json: string,
 ): Promise<ResumeChats> {
-    console.log(`[extractChat] [START] - `);
+    //console.log(`[extractChat] [START] - `);
 
-    console.log(`[extractChat] [ INFO] - Crear array con todos los chats asociados a nuestro usuario`);
+    //console.log(`[extractChat] [ INFO] - Crear array con todos los chats asociados a nuestro usuario`);
     const meChats: Chat[] = await Chat.fromAPIRequestManager(
         apiRequestManager,
         'https://graph.microsoft.com/v1.0/me/chats/',
     );
 
-    console.log(`[extractChat] [ INFO] - Reordenar los chats usando el campo 'chatType'`);
+    //console.log(`[extractChat] [ INFO] - Reordenar los chats usando el campo 'chatType'`);
     const groupedChats = Chat.groupChatsByType(meChats);
 
-    console.log(`[extractChat] [ INFO] - Completar el campo 'topic' de los grupos 'oneOnOne'`);
+    //console.log(`[extractChat] [ INFO] - Completar el campo 'topic' de los grupos 'oneOnOne'`);
+    let i = 1;
     for (const chat of groupedChats.oneOnOne) {
         const userIds = chat.getIdUserOneOnOne();
         if (userIds !== undefined) {
@@ -36,12 +37,12 @@ export default async function extractChat(
                     chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[1])).getUserName();
                 }
             } catch {
-                chat.topic = 'NoEncontrado';
+                chat.topic = `SIN_USER_${(i++).toString().padStart(3, '0')}`;
             }
         }
     }
 
-    console.log(`[extractChat] [ INFO] - Completar el campo 'topic' de los grupos 'group'`);
+    //console.log(`[extractChat] [ INFO] - Completar el campo 'topic' de los grupos 'group'`);
     for (const chat of groupedChats.group) {
         const mails = await chat.getChatMembers(apiRequestManager);
         if (mails) {
@@ -57,9 +58,7 @@ export default async function extractChat(
         }
     }
 
-    console.log(
-        `[extractChat] [ INFO] - Iterar sobre cada Chat para, asignarle los mensajes y para no tener que hacer otro bucle, aprovechamos y lo vamos guardando como JSON`,
-    );
+    //console.log(`[extractChat] [ INFO] - Iterar sobre cada Chat para, asignarle los mensajes y para no tener que hacer otro bucle, aprovechamos y lo vamos guardando como JSON`,);
     const chatData: ResumeChats = {};
     for (const key in groupedChats) {
         if (Object.hasOwnProperty.call(groupedChats, key)) {
@@ -69,13 +68,11 @@ export default async function extractChat(
             //const chatTopics: string[] = [];
 
             for (const chat of chatsArray) {
+                const name = calculateCRC(chat.topic ?? generarStringAleatorio(50)).padStart(8, 'Z');
+                const chatUrl = `https://graph.microsoft.com/v1.0/me/chats/${chat.id}/messages`;
                 try {
-                    const name = calculateCRC(chat.topic ?? generarStringAleatorio(50));
                     // Asignarle a cada Chat, su historial de mensajes correspondientes
-                    const mensajes: Mensaje[] = await Mensaje.fromAPIRequestManager(
-                        apiRequestManager,
-                        `https://graph.microsoft.com/v1.0/me/chats/${chat.id}/messages`,
-                    );
+                    const mensajes: Mensaje[] = await Mensaje.fromAPIRequestManager(apiRequestManager, chatUrl);
                     chat.messages = mensajes;
 
                     // Guardar cada chat como un fichero JSON
@@ -88,7 +85,7 @@ export default async function extractChat(
                     chatTopics.push([name, chat.topic]);
                 } catch (error) {
                     // Manejar el error aquí, por ejemplo, registrándolo en la consola
-                    console.error(`Error al procesar el chat <${chat.topic}>:`, (error as AxiosError).response);
+                    console.error(`NO se puede procesar los datos del chat <${chat.topic}> <${name}> <${chatUrl}>`);
                     // Continuar con la siguiente iteración del bucle
                     continue;
                 }
@@ -99,7 +96,7 @@ export default async function extractChat(
         }
     }
 
-    console.log(`[extractChat] [  END] - `);
+    //console.log(`[extractChat] [  END] - `);
     return chatData;
 }
 

@@ -6,6 +6,7 @@ export default class APIRequestManager {
     private readonly instance: AxiosInstance;
 
     constructor(authToken: string) {
+        console.log(`[extractChat] [START] - `);
         this.instance = axios.create({
             headers: {
                 Accept: 'application/json, text/plain, */*',
@@ -15,6 +16,17 @@ export default class APIRequestManager {
                     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36',
             },
         });
+
+        this.initialize();
+    }
+
+    private async initialize() {
+        try {
+            await this.fetchResponse(`https://graph.microsoft.com/v1.0/me`);
+        } catch (error) {
+            console.log(`Este ACCESS_TOKEN ha caducado, no se puede continuar con la ejecucion del programa`);
+            process.exit(2); // Detener la ejecución del programa con un código de salida no cero para indicar un error
+        }
     }
 
     async fetchResponse(apiUrl: string): Promise<any[]> {
