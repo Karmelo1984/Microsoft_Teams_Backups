@@ -20,21 +20,40 @@ export default class Chat {
     }
 
     static async fromAPIRequestManager(apiRequestManager: APIRequestManager, url: string): Promise<Chat[]> {
-        try {
-            const jsonData: any = await apiRequestManager.fetchResponse(url);
+        console.log(`[Chat.fromAPIRequestManager] [START] - ${url}`);
 
-            this.verificarChatData(jsonData);
+        let chats: Chat[] = [];
+        let nextPageUrl = url;
 
-            const chats: Chat[] = jsonData.value.map((chatData: ChatData) => new Chat(chatData));
-            return chats;
-        } catch (error) {
-            throw new Error('Error al obtener datos del chat: ' + error);
+        while (nextPageUrl) {
+            const jsonData: any = await apiRequestManager.fetchResponse(nextPageUrl);
+
+            /*
+            if (Chat.isChatData(jsonData)) {
+                console.error(`El objeto JSON NO tiene una estructura de CHAT.
+                ${jsonData}`);
+
+                continue;
+            }
+            */
+
+            chats.push(
+                ...jsonData.value.map((chatData: ChatData) => {
+                    return new Chat(chatData);
+                }),
+            );
+
+            nextPageUrl = jsonData['@odata.nextLink'];
         }
+
+        console.log(`[Chat.fromAPIRequestManager] [  END] - ${url} --> '${chats.length}' chats`);
+        return chats;
     }
 
     static groupChatsByType(chats: Chat[]): { [chatType: string]: Chat[] } {
         const groupedChats: { [chatType: string]: Chat[] } = {};
 
+        // console.log(groupedChats);
         chats.forEach((chat) => {
             if (!(chat.chatType in groupedChats)) {
                 groupedChats[chat.chatType] = [];
@@ -84,7 +103,7 @@ export default class Chat {
         return undefined;
     }
 
-    private static verificarChatData(obj: any): void {
+    private static isChatData_(obj: any): void {
         if (!Array.isArray(obj.value)) {
             throw new Error('El objeto no contiene un array de chats');
         }
@@ -100,5 +119,25 @@ export default class Chat {
                 throw new Error('La propiedad topic debe ser una cadena o null');
             }
         }
+    }
+
+    private static isChatData(obj: any): Boolean {
+        if (!Array.isArray(obj.value)) {
+            return false;
+        }
+
+        for (const chat of obj.value) {
+            const requiredProperties = ['id', 'createdDateTime', 'lastUpdatedDateTime', 'chatType'];
+            for (const prop of requiredProperties) {
+                if (typeof chat[prop] !== 'string') {
+                    return false;
+                }
+            }
+            if (typeof chat.topic !== 'string' && chat.topic !== null) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -14,28 +14,34 @@ export default async function extractChat(
     me: Usuario,
     path_json: string,
 ): Promise<ResumeChats> {
-    // Creamos un array con todos los chats asociados a nuestro usuario
+    console.log(`[extractChat] [START] - `);
+
+    console.log(`[extractChat] [ INFO] - Crear array con todos los chats asociados a nuestro usuario`);
     const meChats: Chat[] = await Chat.fromAPIRequestManager(
         apiRequestManager,
         'https://graph.microsoft.com/v1.0/me/chats/',
     );
 
-    // Reordenamos los chats usando el campo 'chatType'
+    console.log(`[extractChat] [ INFO] - Reordenar los chats usando el campo 'chatType'`);
     const groupedChats = Chat.groupChatsByType(meChats);
 
-    // Completamos el campo 'topic' de los grupos 'oneOnOne'
+    console.log(`[extractChat] [ INFO] - Completar el campo 'topic' de los grupos 'oneOnOne'`);
     for (const chat of groupedChats.oneOnOne) {
         const userIds = chat.getIdUserOneOnOne();
         if (userIds !== undefined) {
-            if (userIds[0] !== me.id) {
-                chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[0])).getUserName();
-            } else {
-                chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[1])).getUserName();
+            try {
+                if (userIds[0] !== me.id) {
+                    chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[0])).getUserName();
+                } else {
+                    chat.topic = (await Usuario.getUserById(apiRequestManager, userIds[1])).getUserName();
+                }
+            } catch {
+                chat.topic = 'NoEncontrado';
             }
         }
     }
 
-    // Completamos el campo 'topic' de los grupos 'group'
+    console.log(`[extractChat] [ INFO] - Completar el campo 'topic' de los grupos 'group'`);
     for (const chat of groupedChats.group) {
         const mails = await chat.getChatMembers(apiRequestManager);
         if (mails) {
@@ -51,9 +57,10 @@ export default async function extractChat(
         }
     }
 
-    // Iteramos sobre cada Chat para, asignarle los mensajes y para no tener que hacer otro bucle, aprovechamos y lo vamos guardando como JSON
+    console.log(
+        `[extractChat] [ INFO] - Iterar sobre cada Chat para, asignarle los mensajes y para no tener que hacer otro bucle, aprovechamos y lo vamos guardando como JSON`,
+    );
     const chatData: ResumeChats = {};
-
     for (const key in groupedChats) {
         if (Object.hasOwnProperty.call(groupedChats, key)) {
             const chatsArray = groupedChats[key];
@@ -91,6 +98,8 @@ export default async function extractChat(
             chatData[key] = chatTopics;
         }
     }
+
+    console.log(`[extractChat] [  END] - `);
     return chatData;
 }
 

@@ -65,7 +65,6 @@ async function main(): Promise<void> {
             const chat: ChatData = jsonFileManager.readJSON();
 
             const { messages, ...rest } = chat;
-            const reversedMessages = messages !== null ? messages.reverse() : null;
 
             // Quizás es el peor lugar, pero toca descargarse las imágenes y redireccionarlas en los mensajes
             let imageIdx = 1;
@@ -76,8 +75,8 @@ async function main(): Promise<void> {
                 }
             });
 
-            if (reversedMessages) {
-                for (const message of reversedMessages) {
+            if (messages) {
+                for (const message of messages) {
                     const images = Array.isArray(message.image) && message.image.length > 0 ? message.image : undefined;
 
                     if (images) {
@@ -101,7 +100,7 @@ async function main(): Promise<void> {
             const indexHTML = HTMLGenerator.generateHTML(
                 `Chat: ${chatPath.topic}`,
                 generateHeaderChatHTML(rest, indexPath),
-                generateBodyChatHTML(reversedMessages, myUser.id),
+                generateBodyChatHTML(messages, myUser.id),
                 '../../chat-teams.css',
                 chatPath.pathChatHTML,
             );

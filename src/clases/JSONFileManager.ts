@@ -31,7 +31,7 @@ export default class JSONFileManager {
         // Escribir el archivo JSON
         try {
             await fs.promises.writeFile(this.filePath, JSON.stringify(data, null, 2));
-            console.log(`Archivo guardado correctamente en ${this.filePath}`);
+            console.log(`[JSONFileManager.writeJSON] [ INFO] - Guardado correcto en: ${this.filePath}`);
         } catch (error) {
             if (error instanceof Error) {
                 console.error(`Error al guardar el archivo: ${error.message}`);

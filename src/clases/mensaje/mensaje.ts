@@ -29,13 +29,18 @@ export default class Mensaje {
     }
 
     static async fromAPIRequestManager(apiRequestManager: APIRequestManager, url: string): Promise<Mensaje[]> {
+        console.log(`[Mensaje.fromAPIRequestManager] [START] - ${url}`);
         let mensajes: Mensaje[] = [];
         let nextPageUrl = url;
 
         while (nextPageUrl) {
             const jsonData: any = await apiRequestManager.fetchResponse(nextPageUrl);
+
             if (!Mensaje.isMessageData(jsonData)) {
-                throw new Error('El objeto JSON no cumple con la estructura de mensaje esperada.');
+                console.error(
+                    `[Mensaje.fromAPIRequestManager] [ WARN] - El objeto JSON NO tiene una estructura de MENSAJE.`,
+                );
+                continue;
             }
 
             // Se agregan todos los mensajes que no sean del sistema
@@ -65,7 +70,8 @@ export default class Mensaje {
             nextPageUrl = jsonData['@odata.nextLink'];
         }
 
-        return mensajes;
+        console.log(`[Mensaje.fromAPIRequestManager] [  END] - ${url} --> '${mensajes.length}' mensajes`);
+        return mensajes.reverse();
     }
 
     private static isMessageData(obj: any): Boolean {
