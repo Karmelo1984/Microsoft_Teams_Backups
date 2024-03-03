@@ -8,7 +8,7 @@ export default async function extractMyUser(apiRequestManager: APIRequestManager
     const myUser: Usuario = await Usuario.getMyUser(apiRequestManager);
 
     const jsonFileManager = new JSONFileManager(path.resolve(path_save, `myUser.json`));
-    jsonFileManager.writeJSON(myUser);
+    await jsonFileManager.writeJSON(myUser);
 
     return myUser;
 }

@@ -1,6 +1,7 @@
 import APIRequestManager from '../APIRequestManager';
+import Mensaje from '../mensaje/mensaje';
 import MensajeData from '../mensaje/mensaje.interface';
-import ChatData from './chat.interface';
+import ChatData, { ChatObjectResponse, ResumeTypeChats } from './chat.interface';
 
 export default class Chat {
     id: string;
@@ -8,6 +9,7 @@ export default class Chat {
     createdDateTime: Date;
     lastUpdatedDateTime: Date;
     chatType: string;
+    standardName?: string;
     messages: MensajeData[] | null;
 
     constructor(data: ChatData) {
@@ -16,51 +18,49 @@ export default class Chat {
         this.createdDateTime = new Date(data.createdDateTime);
         this.lastUpdatedDateTime = new Date(data.lastUpdatedDateTime);
         this.chatType = data.chatType;
-        this.messages = data.messages;
+        this.messages = data.messages ?? [];
     }
 
-    static async fromAPIRequestManager(apiRequestManager: APIRequestManager, url: string): Promise<Chat[]> {
-        console.log(`[Chat.fromAPIRequestManager] [START] - ${url}`);
-
+    static async getAllMyChats(apiRequestManager: APIRequestManager): Promise<Chat[]> {
         let chats: Chat[] = [];
-        let nextPageUrl = url;
+        let nextPageUrl = 'https://graph.microsoft.com/v1.0/me/chats/';
 
         while (nextPageUrl) {
-            const jsonData: any = await apiRequestManager.fetchResponse(nextPageUrl);
+            const jsonData = await Chat.fetchChatData(apiRequestManager, nextPageUrl);
 
-            /*
-            if (Chat.isChatData(jsonData)) {
-                console.error(`El objeto JSON NO tiene una estructura de CHAT.
-                ${jsonData}`);
-
-                continue;
+            if (!jsonData) {
+                break;
             }
-            */
 
-            chats.push(
-                ...jsonData.value.map((chatData: ChatData) => {
-                    return new Chat(chatData);
-                }),
-            );
+            const chatDataArray: ChatData[] = jsonData.value.map((value: any) => ({
+                id: value.id,
+                topic: value.topic,
+                createdDateTime: value.createdDateTime,
+                lastUpdatedDateTime: value.lastUpdatedDateTime,
+                chatType: value.chatType,
+                messages: value.messages,
+            })) as ChatData[];
+
+            chats.push(...chatDataArray.map((chatData: ChatData) => new Chat(chatData)));
 
             nextPageUrl = jsonData['@odata.nextLink'];
         }
 
-        console.log(`[Chat.fromAPIRequestManager] [  END] - ${url} --> '${chats.length}' chats`);
         return chats;
     }
 
-    static groupChatsByType(chats: Chat[]): { [chatType: string]: Chat[] } {
-        const groupedChats: { [chatType: string]: Chat[] } = {};
+    static groupChatsByType(chats: Chat[]): ResumeTypeChats[] {
+        const groupedChats: ResumeTypeChats[] = [];
 
-        // console.log(groupedChats);
         chats.forEach((chat) => {
-            if (!(chat.chatType in groupedChats)) {
-                groupedChats[chat.chatType] = [];
-            }
-            groupedChats[chat.chatType].push(chat);
-        });
+            const existingGroupChat = groupedChats.find((groupedChat) => groupedChat.type === chat.chatType);
 
+            if (existingGroupChat) {
+                existingGroupChat.chats.push(chat);
+            } else {
+                groupedChats.push({ type: chat.chatType, chats: [chat] });
+            }
+        });
         return groupedChats;
     }
 
@@ -91,6 +91,26 @@ export default class Chat {
         }
     }
 
+    async downloadMessages(apiRequestManager: APIRequestManager): Promise<void> {
+        this.messages = await Mensaje.getAllMessagesByIdChat(apiRequestManager, this.id);
+    }
+
+    static sortByTopic(chats: Chat[]): Chat[] {
+        // Utiliza el método sort() para ordenar los chats por el campo topic
+        return chats.sort((a, b) => {
+            // Si el campo topic es null, colócalo al final
+            if (a.topic === null && b.topic === null) {
+                return 0;
+            } else if (a.topic === null) {
+                return 1;
+            } else if (b.topic === null) {
+                return -1;
+            }
+            // Compara los topics alfabéticamente
+            return a.topic.localeCompare(b.topic);
+        });
+    }
+
     getIdUserOneOnOne(): string[] | undefined {
         if (this.chatType === 'oneOnOne') {
             const idParts = this.id.split(':');
@@ -103,41 +123,65 @@ export default class Chat {
         return undefined;
     }
 
-    private static isChatData_(obj: any): void {
-        if (!Array.isArray(obj.value)) {
-            throw new Error('El objeto no contiene un array de chats');
-        }
+    private static async fetchChatData(
+        apiRequestManager: APIRequestManager,
+        url: string,
+    ): Promise<ChatObjectResponse | undefined> {
+        const response = await apiRequestManager.fetchResponse(url);
 
-        for (const chat of obj.value) {
-            const requiredProperties = ['id', 'createdDateTime', 'lastUpdatedDateTime', 'chatType'];
-            for (const prop of requiredProperties) {
-                if (typeof chat[prop] !== 'string') {
-                    throw new Error(`La propiedad ${prop} es inválida`);
-                }
-            }
-            if (typeof chat.topic !== 'string' && chat.topic !== null) {
-                throw new Error('La propiedad topic debe ser una cadena o null');
+        if (response) {
+            if (Chat.isChatData(response)) {
+                return response;
             }
         }
+        return undefined;
     }
 
-    private static isChatData(obj: any): Boolean {
-        if (!Array.isArray(obj.value)) {
-            return false;
-        }
-
-        for (const chat of obj.value) {
-            const requiredProperties = ['id', 'createdDateTime', 'lastUpdatedDateTime', 'chatType'];
-            for (const prop of requiredProperties) {
-                if (typeof chat[prop] !== 'string') {
+    private static isChatData(obj: any): obj is ChatObjectResponse {
+        //console.log('Checking base object...');
+        if (
+            typeof obj === 'object' &&
+            '@odata.context' in obj &&
+            typeof obj['@odata.context'] === 'string' &&
+            '@odata.count' in obj &&
+            typeof obj['@odata.count'] === 'number' &&
+            '@odata.nextLink' in obj &&
+            //typeof obj['@odata.nextLink'] === 'string' &&
+            //'value' in obj &&
+            Array.isArray(obj['value'])
+        ) {
+            //console.log('Base object checks passed. Checking individual chats...');
+            for (const chat of obj['value']) {
+                //console.log('Checking chat object...');
+                if (
+                    typeof chat === 'object' &&
+                    'id' in chat &&
+                    typeof chat['id'] === 'string' &&
+                    ('topic' in chat || chat['topic'] === null) &&
+                    'createdDateTime' in chat &&
+                    typeof chat['createdDateTime'] === 'string' &&
+                    'lastUpdatedDateTime' in chat &&
+                    typeof chat['lastUpdatedDateTime'] === 'string' &&
+                    'chatType' in chat &&
+                    typeof chat['chatType'] === 'string' &&
+                    'webUrl' in chat &&
+                    typeof chat['webUrl'] === 'string' &&
+                    'tenantId' in chat &&
+                    typeof chat['tenantId'] === 'string' &&
+                    ('onlineMeetingInfo' in chat || chat['onlineMeetingInfo'] === null) &&
+                    'viewpoint' in chat &&
+                    typeof chat['viewpoint'] === 'object'
+                ) {
+                    //console.log('Chat object checks passed.');
+                } else {
+                    //console.log('Chat object checks failed.');
                     return false;
                 }
             }
-            if (typeof chat.topic !== 'string' && chat.topic !== null) {
-                return false;
-            }
+            //console.log('All chats checked.');
+            return true;
         }
-
-        return true;
+        //console.log('Base object checks failed.');
+        return false;
     }
 }

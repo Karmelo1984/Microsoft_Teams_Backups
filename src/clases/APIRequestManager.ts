@@ -1,12 +1,11 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import path from 'path';
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
 import fs from 'fs';
 
 export default class APIRequestManager {
     private readonly instance: AxiosInstance;
 
     constructor(authToken: string) {
-        console.log(`[extractChat] [START] - `);
+        //console.log(`[extractChat] [START] - `);
         this.instance = axios.create({
             headers: {
                 Accept: 'application/json, text/plain, */*',
@@ -24,12 +23,13 @@ export default class APIRequestManager {
         try {
             await this.fetchResponse(`https://graph.microsoft.com/v1.0/me`);
         } catch (error) {
-            console.log(`Este ACCESS_TOKEN ha caducado, no se puede continuar con la ejecucion del programa`);
+            //console.log(error);
+            console.error(`[${(error as AxiosError).code}] ACCESS_TOKEN caducado. NO se puede continuar.`);
             process.exit(2); // Detener la ejecución del programa con un código de salida no cero para indicar un error
         }
     }
 
-    async fetchResponse(apiUrl: string): Promise<any[]> {
+    async fetchResponse(apiUrl: string): Promise<any> {
         let response: any = undefined;
         const res: AxiosResponse<any> = await this.instance.get(apiUrl);
 

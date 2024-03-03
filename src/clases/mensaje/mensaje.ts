@@ -1,9 +1,20 @@
+import * as path from 'path';
+import fs from 'fs';
+
 import APIRequestManager from '../APIRequestManager';
-import MensajeData from './mensaje.interface';
+import MensajeData, { Attachments } from './mensaje.interface';
+import { findRootDirectory } from '../../utils';
 
 const UPLOADED_IMAGE_MATCH = /https:\/\/graph.microsoft.com\/v1.0\/chats([^"]*)/g;
 
 export default class Mensaje {
+    static readonly PATH_IMAGE_NOTFOUND: string = path.resolve(
+        findRootDirectory() ?? '',
+        'src',
+        'styles',
+        'image-404_notFound.png',
+    );
+
     id_msg: string;
     createdDateTime: string;
     id_user: string;
@@ -11,7 +22,7 @@ export default class Mensaje {
     contentType: string;
     content: string;
     image: string[] | undefined;
-    attachments: any[]; // No se especifica el tipo de datos para 'attachments', 'mentions' y 'reactions'
+    attachments: Attachments[]; // No se especifica el tipo de datos para 'attachments', 'mentions' y 'reactions'
     mentions: any[];
     reactions: any[];
 
@@ -28,10 +39,11 @@ export default class Mensaje {
         this.reactions = data.reactions || [];
     }
 
-    static async fromAPIRequestManager(apiRequestManager: APIRequestManager, url: string): Promise<Mensaje[]> {
-        console.log(`[Mensaje.fromAPIRequestManager] [START] - ${url}`);
+    static async getAllMessagesByIdChat(apiRequestManager: APIRequestManager, idChat: string): Promise<Mensaje[]> {
+        const chatUrl = `https://graph.microsoft.com/v1.0/me/chats/${idChat}/messages`;
+
         let mensajes: Mensaje[] = [];
-        let nextPageUrl = url;
+        let nextPageUrl = chatUrl;
 
         while (nextPageUrl) {
             const jsonData: any = await apiRequestManager.fetchResponse(nextPageUrl);
@@ -70,8 +82,67 @@ export default class Mensaje {
             nextPageUrl = jsonData['@odata.nextLink'];
         }
 
-        console.log(`[Mensaje.fromAPIRequestManager] [  END] - ${url} --> '${mensajes.length}' mensajes`);
         return mensajes.reverse();
+    }
+
+    static async processImages(
+        apiRequestManager: APIRequestManager,
+        mensaje: MensajeData,
+        path_ChatImages: string,
+        imageName: string,
+    ) {
+        const images = Array.isArray(mensaje.image) && mensaje.image.length > 0 ? mensaje.image : undefined;
+        if (images) {
+            try {
+                for (const image of images) {
+                    // ademas de descargarlo, cambia en el mensaje el enlace para que apunte a la ruta local
+                    const path_image = path.resolve(path_ChatImages, `${imageName}`);
+
+                    mensaje.content = mensaje.content.replace(image, path_image);
+
+                    await apiRequestManager.fetchResponseImage(image, path_image);
+                }
+            } catch (error) {
+                await Mensaje.copyFile(Mensaje.PATH_IMAGE_NOTFOUND, path_ChatImages, `${imageName}`);
+            }
+        }
+    }
+
+    static async processAttachments(mensaje: MensajeData, path_ChatAttachments: string, attachmentName: string) {
+        const attachments =
+            Array.isArray(mensaje.attachments) && mensaje.attachments.length > 0 ? mensaje.attachments : undefined;
+        if (attachments) {
+            try {
+                for (const attachment of attachments) {
+                    if (attachment.contentType !== 'messageReference') {
+                        const parts = attachment.name.split('.');
+                        const fileName = parts.slice(0, -1).join('.'); // Nombre del archivo (todo menos la última parte)
+                        const fileExtension = parts[parts.length - 1]; // Extensión del archivo (la última parte)
+
+                        const path_attachment = path.resolve(
+                            path_ChatAttachments,
+                            `${attachmentName}.${fileExtension}`,
+                        );
+
+                        mensaje.content = mensaje.content.replace(attachment.contentUrl, path_attachment);
+
+                        // Queda pendiente que se puedan descargar los ficheros
+                    }
+                }
+            } catch (error) {
+                console.error(`Error al procesar mensaje <${error}>`);
+            }
+        }
+    }
+
+    // Función para convertir el array de MensajeData a un array de Mensaje
+    static parseMensajes(arrayMensajeData: MensajeData[]): Mensaje[] {
+        const mensajes: Mensaje[] = [];
+        for (const mensajeData of arrayMensajeData) {
+            const mensaje = new Mensaje(mensajeData);
+            mensajes.push(mensaje);
+        }
+        return mensajes;
     }
 
     private static isMessageData(obj: any): Boolean {
@@ -80,5 +151,21 @@ export default class Mensaje {
             Array.isArray(obj.value) &&
             obj.value.every((msg: any) => typeof msg === 'object' && 'id' in msg && 'createdDateTime' in msg)
         );
+    }
+
+    private static async copyFile(srcPath: string, destPath: string, newName: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const readStream = fs.createReadStream(srcPath);
+            const writeStream = fs.createWriteStream(path.join(destPath, newName));
+
+            readStream.on('error', reject);
+            writeStream.on('error', reject);
+
+            readStream.on('close', () => {
+                resolve();
+            });
+
+            readStream.pipe(writeStream);
+        });
     }
 }

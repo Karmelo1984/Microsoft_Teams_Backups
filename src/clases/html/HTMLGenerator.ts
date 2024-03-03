@@ -154,7 +154,7 @@ export default class HTMLGenerator {
 
         try {
             fs.writeFileSync(htmlPath, this.getHTML() ?? '');
-            console.log(`HTML guardado en --> ${htmlPath}`);
+            //console.log(`HTML guardado en --> ${htmlPath}`);
         } catch (error) {
             console.error(`ERROR de guardado de HTML --> ${error}`);
         }

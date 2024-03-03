@@ -6,7 +6,17 @@ export default interface MensajeData {
     contentType: string;
     content: string;
     image: string[] | undefined;
-    attachments: any[]; // No se especifica el tipo de datos para 'attachments', 'mentions' y 'reactions'
+    attachments: Attachments[]; // No se especifica el tipo de datos para 'attachments', 'mentions' y 'reactions'
     mentions: any[];
     reactions: any[];
+}
+
+export interface Attachments {
+    id: string;
+    contentType: string;
+    contentUrl: string;
+    name: string;
+    content?: string;
+    thumbnailUrl?: string;
+    teamsAppId?: string;
 }
