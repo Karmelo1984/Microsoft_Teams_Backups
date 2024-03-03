@@ -1,6 +1,6 @@
 {
     "name": "microsoft-teams-backups",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Hacer un backups de todos los chat de la cuenta de Microsoft Teams",
     "main": "index.js",
     "repository": "https://github.com/Karmelo1984/Microsoft_Teams_Backups.git",

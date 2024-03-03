@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.1](https://github.com/Karmelo1984/Microsoft_Teams_Backups/compare/v1.0.0...v1.0.1) (2024-03-03)
+
+
+### Bug Fixes
+
+* **chat:** no extrae más de 20 chat ([f5e051b](https://github.com/Karmelo1984/Microsoft_Teams_Backups/commit/f5e051bfad8f0e255ea4c79b842cde188d6c220b)), closes [#1](https://github.com/Karmelo1984/Microsoft_Teams_Backups/issues/1)
+* **chats:** no extrae más de 20 chat ([dedf840](https://github.com/Karmelo1984/Microsoft_Teams_Backups/commit/dedf840612872f15e281748ffb2e7bf6bf55eba7)), closes [#1](https://github.com/Karmelo1984/Microsoft_Teams_Backups/issues/1)
+
 ## 1.0.0 (2024-02-25)
 
 
