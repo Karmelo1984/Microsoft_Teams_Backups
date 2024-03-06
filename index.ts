@@ -16,7 +16,6 @@ import IndexHTML from './src/clases/html/indexHTML';
 import Mensaje from './src/clases/mensaje/mensaje';
 import BasicLog from './src/clases/basicLog';
 import ChatHTML from './src/clases/html/chatHTML';
-import JSONFileManager from './src/clases/JSONFileManager';
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -48,8 +47,6 @@ async function main(): Promise<void> {
 
     BasicLog.consoleLog('MAIN', `Extraer todos los chats relacionados al ACCESS_TOKEN`);
     const myChat = await extractChat(PATH_SALIDA, apiRequestManager, myUser, path_jsonChat);
-    //const jsonFileManager = new JSONFileManager(path.resolve(PATH_SALIDA, `myChat.json`));
-    //const myChat: Chat[] = jsonFileManager.readJSON();
 
     BasicLog.consoleLog('MAIN', `Generar JSON con path, aprupados por 'chatType'`);
     const resumeTypeChats: ResumePathChatTypes[] = generateInfoPath(myChat, path_jsonChat, path_webChat);
