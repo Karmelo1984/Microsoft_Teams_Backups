@@ -79,7 +79,6 @@ export default async function extractChat(
     BasicLog.consoleLog('extractChat', 'Guardar backup del array de chats en formato JSON');
     const jsonFileManager = new JSONFileManager(path.resolve(path_salida, `myChat.json`));
     await jsonFileManager.writeJSON(myChats);
-    //const myChat: Chat[] = jsonFileManager.readJSON();
 
     return myChats;
 }
@@ -96,10 +95,4 @@ function generarStringAleatorio(longitud: number): string {
         resultado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
     return resultado;
-}
-
-function generateTimestamp(): string {
-    const now = new Date();
-    const timestamp = `\x1b[32m[${now.toLocaleDateString('es-ES')} ${now.toLocaleTimeString('es-ES', { hour12: false })}.${now.getMilliseconds().toString().padStart(3, '0')}] \x1b[0m`;
-    return timestamp;
 }

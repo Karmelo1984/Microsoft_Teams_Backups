@@ -16,6 +16,7 @@ import IndexHTML from './src/clases/html/indexHTML';
 import Mensaje from './src/clases/mensaje/mensaje';
 import BasicLog from './src/clases/basicLog';
 import ChatHTML from './src/clases/html/chatHTML';
+import JSONFileManager from './src/clases/JSONFileManager';
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -28,30 +29,33 @@ async function main(): Promise<void> {
         process.exit(1); // Detener la ejecución del programa con un código de salida no cero para indicar un error
     }
 
+    BasicLog.consoleLog('MAIN', 'Inicializar path donde se guardarán los distintos ficheros');
+    const path_jsonChat = path.resolve(PATH_SALIDA, 'chats');
+    const path_web = path.resolve(PATH_SALIDA, 'web');
+
+    const pathMyUserPhoto = path.resolve(path_web, 'myUser.png');
+    const path_webChat = path.resolve(path_web, 'chats');
+    const path_indexHTML = path.resolve(path_web, `index.html`);
+
     BasicLog.consoleLog('MAIN', 'Inicializar la conexión');
     const apiRequestManager = new APIRequestManager(ACCESS_TOKEN);
 
     BasicLog.consoleLog('MAIN', 'Extraer el usuario relacionado al ACCESS_TOKEN');
     const myUser = await extractMyUser(apiRequestManager, PATH_SALIDA);
-    const pathMyUserPhoto = path.resolve(PATH_SALIDA, 'myUser.png');
 
     BasicLog.consoleLog('MAIN', 'Descargar la imagen de perfil del usuario');
     apiRequestManager.fetchResponseImage('https://graph.microsoft.com/v1.0/me/photo/$value', pathMyUserPhoto);
 
-    BasicLog.consoleLog('MAIN', 'Inicializar path donde se guardarán los distintos ficheros');
-    const path_jsonChat = path.resolve(PATH_SALIDA, 'chats');
-    const path_web = path.resolve(PATH_SALIDA, 'web');
-    const path_webChat = path.resolve(PATH_SALIDA, 'web', 'chats');
-    const path_indexHTML = path.resolve(path_web, `index.html`);
-
     BasicLog.consoleLog('MAIN', `Extraer todos los chats relacionados al ACCESS_TOKEN`);
     const myChat = await extractChat(PATH_SALIDA, apiRequestManager, myUser, path_jsonChat);
+    //const jsonFileManager = new JSONFileManager(path.resolve(PATH_SALIDA, `myChat.json`));
+    //const myChat: Chat[] = jsonFileManager.readJSON();
 
     BasicLog.consoleLog('MAIN', `Generar JSON con path, aprupados por 'chatType'`);
     const resumeTypeChats: ResumePathChatTypes[] = generateInfoPath(myChat, path_jsonChat, path_webChat);
 
     BasicLog.consoleLog('MAIN', `Generar 'index.html'`);
-    IndexHTML.generateIndexHTML(myUser.getUserName(), pathMyUserPhoto, resumeTypeChats, path_indexHTML);
+    IndexHTML.generateIndexHTML(myUser.getUserName(), './myUser.png', resumeTypeChats, path_indexHTML);
 
     let chatCount = 1;
     for (const chat of myChat) {
@@ -83,8 +87,7 @@ async function main(): Promise<void> {
         }
 
         BasicLog.consoleLog('MAIN', `${msgHead} Generar 'chat.html': ${chat.topic}`);
-
-        ChatHTML.generateChatHTML(path_indexHTML, chat, myUser.id, path_ChatHTML);
+        ChatHTML.generateChatHTML(chat, myUser.id, path_ChatHTML);
     }
 }
 
@@ -99,7 +102,8 @@ function generateInfoPath(myChat: Chat[], pathChatJSON: string, pathChatWeb: str
             CRC: crc,
             chatType: chat.chatType,
             path_ChatJSON: path.resolve(pathChatJSON, `${crc}.json`),
-            path_ChatHTML: path.resolve(pathChatWeb, crc, `${crc}.html`),
+            path_ChatHTML: path.resolve(pathChatJSON, `${crc}.html`),
+            pathRel_ChatHTML: path.join('chats', `${crc}`, `${crc}.html`),
             path_ChatImages: path.resolve(pathChatWeb, crc, 'images'),
             path_ChatAdjuntos: path.resolve(pathChatWeb, crc, 'adjuntos'),
         };
