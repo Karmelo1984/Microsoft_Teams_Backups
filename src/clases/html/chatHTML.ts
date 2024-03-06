@@ -10,9 +10,9 @@ export default class ChatHTML {
 
     readonly chatHTML: HTMLGenerator;
 
-    constructor(path_indexHTML: string, chat: Chat, myUserId: string, path_chatSave: string, path_stylesCSS: string) {
+    private constructor(chat: Chat, myUserId: string, path_chatSave: string, path_stylesCSS: string) {
         this.chatTitle = `Chat: ${chat.topic}`;
-        this.chatHeader = this.generateHeaderChatHTML(chat, path_indexHTML);
+        this.chatHeader = this.generateHeaderChatHTML(chat);
         this.chatBody = this.generateBodyChatHTML(chat.messages, myUserId);
         this.chatPath = path_chatSave;
 
@@ -26,18 +26,17 @@ export default class ChatHTML {
     }
 
     static generateChatHTML(
-        path_indexHTML: string,
         chat: Chat,
         myUserId: string,
         path_chatSave: string,
         path_stylesCSS: string = '../../chat-teams.css',
     ): void {
-        const instance = new ChatHTML(path_indexHTML, chat, myUserId, path_chatSave, path_stylesCSS);
+        const instance = new ChatHTML(chat, myUserId, path_chatSave, path_stylesCSS);
 
         instance.chatHTML.saveHTMLToFile();
     }
 
-    private generateHeaderChatHTML(chat: Chat, indexPath: string) {
+    private generateHeaderChatHTML(chat: Chat, indexPath: string = '../../index.html') {
         let html = '';
 
         // Botón para volver a la página principal

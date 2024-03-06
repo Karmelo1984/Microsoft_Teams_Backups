@@ -96,11 +96,12 @@ export default class Mensaje {
             try {
                 for (const image of images) {
                     // ademas de descargarlo, cambia en el mensaje el enlace para que apunte a la ruta local
-                    const path_image = path.resolve(path_ChatImages, `${imageName}`);
+                    const pathAbs_image = path.resolve(path_ChatImages, `${imageName}`);
+                    const pathRel_image = path.join('.', 'images', `${imageName}`);
 
-                    mensaje.content = mensaje.content.replace(image, path_image);
+                    mensaje.content = mensaje.content.replace(image, pathRel_image);
 
-                    await apiRequestManager.fetchResponseImage(image, path_image);
+                    await apiRequestManager.fetchResponseImage(image, pathAbs_image);
                 }
             } catch (error) {
                 await Mensaje.copyFile(Mensaje.PATH_IMAGE_NOTFOUND, path_ChatImages, `${imageName}`);
@@ -119,12 +120,13 @@ export default class Mensaje {
                         const fileName = parts.slice(0, -1).join('.'); // Nombre del archivo (todo menos la última parte)
                         const fileExtension = parts[parts.length - 1]; // Extensión del archivo (la última parte)
 
-                        const path_attachment = path.resolve(
+                        const pathAbs_attachment = path.resolve(
                             path_ChatAttachments,
                             `${attachmentName}.${fileExtension}`,
                         );
+                        const pathRel_attachment = path.join('.', 'attachment', `${attachmentName}.${fileExtension}`);
 
-                        mensaje.content = mensaje.content.replace(attachment.contentUrl, path_attachment);
+                        mensaje.content = mensaje.content.replace(attachment.contentUrl, pathRel_attachment);
 
                         // Queda pendiente que se puedan descargar los ficheros
                     }

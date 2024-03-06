@@ -64,8 +64,8 @@ export default class IndexHTML {
         const sectionsHTML = data
             .map(({ chatType, chatPath }) => {
                 const itemsHTML = chatPath
-                    .map(({ path_ChatHTML, topic }) => {
-                        return `<li><a href="${path_ChatHTML}">${topic}</a></li>`;
+                    .map(({ pathRel_ChatHTML, topic }) => {
+                        return `<li><a href="${pathRel_ChatHTML}">${topic}</a></li>`;
                     })
                     .join('');
 
