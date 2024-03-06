@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/Karmelo1984/Microsoft_Teams_Backups/compare/v1.0.1...v1.1.0) (2024-03-06)
+
+
+### Features
+
+* **docker:** añadido compatibilidad con docker ([1f6b869](https://github.com/Karmelo1984/Microsoft_Teams_Backups/commit/1f6b8692520a1f1b65f531fc76132c27f0c3d5fd)), closes [#2](https://github.com/Karmelo1984/Microsoft_Teams_Backups/issues/2)
+
 ### [1.0.1](https://github.com/Karmelo1984/Microsoft_Teams_Backups/compare/v1.0.0...v1.0.1) (2024-03-03)
 
 
